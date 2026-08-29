@@ -296,7 +296,7 @@ Saída esperada: `{'nome': 'Ana', 'email': 'ana@exemplo.com'}`
 
 ## Parte 6 — Atividade prática guiada: contador de visitas com expiração
 
-Esta é a atividade avaliativa formativa da aula (individual ou em duplas). Execute cada etapa **na ordem**, conferindo a saída de cada comando.
+Esta é a atividade avaliativa formativa da aula (individual). Execute cada etapa **na ordem**, conferindo a saída de cada comando.
 
 **Passo 1 — Criar o contador zerado:**
 ```
