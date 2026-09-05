@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz de Prática — IBD-016 — Avaliação 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B2027;
+    --bg-raise: #102D35;
+    --card: #123640;
+    --border: #1E4A55;
+    --teal: #16A98E;
+    --mint: #4BE3B8;
+    --ink: #EAF4F2;
+    --muted: #8FB3AE;
+    --error: #E4685D;
+    --warn: #E8B84B;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(circle at 15% 0%, #123B44 0%, var(--bg) 55%);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .brand {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+  .brand strong { color: var(--mint); }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    font-weight: 700;
+    margin: 0.2rem 0 0.4rem;
+    line-height: 1.15;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.98rem;
+    max-width: 54ch;
+    margin: 0 0 2rem;
+  }
+
+  /* ---- progress ---- */
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.6rem;
+  }
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--mint));
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ---- card ---- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.9rem 1.8rem 1.7rem;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--bg);
+    background: var(--mint);
+    padding: 0.22rem 0.6rem;
+    border-radius: 5px;
+    margin-bottom: 0.9rem;
+    font-weight: 600;
+  }
+  .question-text {
+    font-size: 1.12rem;
+    line-height: 1.5;
+    margin: 0 0 1.35rem;
+    font-weight: 500;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    text-align: left;
+    width: 100%;
+    background: var(--bg-raise);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 0.75rem 0.9rem;
+    border-radius: 9px;
+    font-size: 0.98rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    line-height: 1.4;
+  }
+  .option:hover:not(:disabled) {
+    border-color: var(--teal);
+    background: #163F49;
+  }
+  .option:active:not(:disabled) { transform: scale(0.995); }
+  .option .letter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--mint);
+    flex-shrink: 0;
+  }
+  .option:disabled { cursor: default; }
+  .option.correct {
+    border-color: var(--mint);
+    background: rgba(75, 227, 184, 0.14);
+  }
+  .option.correct .letter { color: var(--mint); }
+  .option.wrong {
+    border-color: var(--error);
+    background: rgba(228, 104, 93, 0.14);
+  }
+  .option.wrong .letter { color: var(--error); }
+  .option.dim { opacity: 0.5; }
+
+  .feedback {
+    margin-top: 1.2rem;
+    padding: 0.95rem 1.05rem;
+    border-radius: 9px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: rgba(75, 227, 184, 0.1); border: 1px solid rgba(75, 227, 184, 0.35); }
+  .feedback.no { background: rgba(228, 104, 93, 0.1); border: 1px solid rgba(228, 104, 93, 0.35); }
+  .feedback .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.78rem;
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+  .feedback.ok .tag { color: var(--mint); }
+  .feedback.no .tag { color: var(--error); }
+
+  .footer-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+  }
+  .next-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: var(--teal);
+    color: #06201C;
+    border: none;
+    padding: 0.7rem 1.4rem;
+    border-radius: 8px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, background 0.15s ease;
+  }
+  .next-btn.show { opacity: 1; pointer-events: auto; }
+  .next-btn:hover { background: var(--mint); }
+
+  /* ---- results ---- */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-body.hide { display: none; }
+
+  .score-hero {
+    text-align: center;
+    padding: 1rem 0 1.6rem;
+  }
+  .score-number {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 3.6rem;
+    font-weight: 700;
+    color: var(--mint);
+    line-height: 1;
+  }
+  .score-out-of {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 0.3rem;
+  }
+  .score-msg {
+    margin-top: 0.9rem;
+    font-size: 1rem;
+    color: var(--ink);
+    max-width: 46ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .breakdown {
+    margin-top: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+  }
+  .breakdown-label { color: var(--ink); }
+  .breakdown-bar-track {
+    grid-column: 1 / -1;
+    height: 8px;
+    background: var(--bg-raise);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .breakdown-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--mint));
+    border-radius: 99px;
+  }
+  .breakdown-score {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 0.7rem;
+    margin-top: 1.8rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn-secondary {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 0.92rem;
+    background: transparent;
+    color: var(--mint);
+    border: 1px solid var(--teal);
+    padding: 0.65rem 1.3rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: rgba(75, 227, 184, 0.08); }
+
+  footer.page-footer {
+    text-align: center;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    margin-top: 2.5rem;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.4rem 1.15rem 1.3rem; }
+    .score-number { font-size: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="brand">IBD-016 <strong>·</strong> Banco de Dados Não Relacional</div>
+    </div>
+    <div class="brand" id="scoreLive"></div>
+  </header>
+
+  <h1>Quiz de prática — Avaliação 1</h1>
+  <p class="subtitle">16 perguntas cobrindo o conteúdo das Aulas 1 a 4. Este quiz não vale nota — é só para você treinar antes da prova. Responda, veja a explicação, e siga em frente.</p>
+
+  <div class="quiz-body" id="quizBody">
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">Questão 1 / 16</div>
+    </div>
+
+    <div class="card">
+      <span class="eyebrow" id="questionTopic">Aula 1</span>
+      <p class="question-text" id="questionText"></p>
+      <div class="options" id="optionsList"></div>
+      <div class="feedback" id="feedback">
+        <span class="tag" id="feedbackTag"></span>
+        <span id="feedbackText"></span>
+      </div>
+      <div class="footer-row">
+        <button class="next-btn" id="nextBtn">Próxima pergunta →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="card">
+      <div class="score-hero">
+        <div class="score-number" id="finalScore">0</div>
+        <div class="score-out-of">de 16 questões corretas</div>
+        <p class="score-msg" id="scoreMsg"></p>
+      </div>
+
+      <div class="breakdown" id="breakdown"></div>
+
+      <div class="actions-row">
+        <button class="next-btn show" id="retryBtn" style="opacity:1;pointer-events:auto;">Refazer o quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">material de apoio — não substitui a revisão do guia de estudos</footer>
+</div>
+
+<script>
+const questions = [
+  {
+    aula: "Aula 1",
+    pergunta: "Uma aplicação armazena posts de blog em arquivos com alguns metadados fixos (autor, data), mas o corpo do texto não segue nenhum padrão de estrutura. Como esse dado deve ser classificado?",
+    opcoes: ["Estruturado", "Semiestruturado", "Não estruturado", "Relacional"],
+    correta: 1,
+    explicacao: "Tem alguma organização (os metadados), mas sem esquema rígido — por isso é semiestruturado, não estruturado nem totalmente livre."
+  },
+  {
+    aula: "Aula 1",
+    pergunta: "Qual das opções abaixo é um exemplo de dado não estruturado?",
+    opcoes: ["Uma tabela de clientes com colunas fixas", "Um arquivo XML com tags aninhadas", "Uma gravação de áudio de atendimento ao cliente", "Um arquivo CSV de vendas mensais"],
+    correta: 2,
+    explicacao: "Áudio não segue nenhum esquema predefinido — é o exemplo clássico de dado não estruturado, ao lado de imagens e vídeos."
+  },
+  {
+    aula: "Aula 1",
+    pergunta: "Uma empresa de streaming precisa processar milhões de eventos de reprodução por segundo, quase em tempo real. Qual \"V\" do Big Data está mais diretamente relacionado a esse desafio?",
+    opcoes: ["Veracidade", "Velocidade", "Valor", "Variedade"],
+    correta: 1,
+    explicacao: "Velocidade é sobre a rapidez com que os dados são gerados e precisam ser processados — exatamente o caso de eventos em tempo real."
+  },
+  {
+    aula: "Aula 1",
+    pergunta: "O \"V\" que se refere à confiabilidade e à qualidade da origem dos dados é:",
+    opcoes: ["Volume", "Variedade", "Veracidade", "Valor"],
+    correta: 2,
+    explicacao: "Veracidade trata da qualidade/confiabilidade do dado, que nem sempre é garantida na origem."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "Qual das alternativas descreve corretamente uma limitação do modelo relacional em cenários de alta escala?",
+    opcoes: ["Bancos relacionais não suportam nenhum tipo de índice", "Alterar o esquema de uma tabela em produção pode ser custoso e arriscado em bases muito grandes", "SQL não permite realizar filtros em consultas", "Bancos relacionais não conseguem armazenar números decimais"],
+    correta: 1,
+    explicacao: "A rigidez de esquema (schema-on-write) é uma das limitações centrais do relacional discutidas em aula."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "Em um sistema que aceita, temporariamente, inconsistência entre réplicas em troca de maior disponibilidade, dizemos que ele adota o modelo:",
+    opcoes: ["ACID", "BASE", "CAP", "SQL"],
+    correta: 1,
+    explicacao: "BASE (Basically Available, Soft state, Eventually consistent) é exatamente esse trade-off: disponibilidade em troca de consistência imediata."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "Em um sistema bancário, ao ocorrer uma falha de rede entre servidores, o sistema prefere recusar uma transação a arriscar mostrar um saldo desatualizado. Esse comportamento é característico de um sistema:",
+    opcoes: ["AP", "CP", "Apenas BASE", "Apenas eventualmente consistente"],
+    correta: 1,
+    explicacao: "Priorizar consistência (recusar responder) em vez de disponibilidade é a marca de um sistema CP."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "O Teorema CAP afirma que, diante de uma partição de rede, um sistema distribuído deve escolher entre:",
+    opcoes: ["Volume e Velocidade", "ACID e BASE", "Consistência e Disponibilidade", "SQL e NoSQL"],
+    correta: 2,
+    explicacao: "O trade-off central do CAP, quando há uma partição, é entre Consistência (C) e Disponibilidade (A)."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "Um sistema de recomendação que precisa consultar relacionamentos profundos entre usuários (\"amigos de amigos\") se beneficiaria mais de qual categoria de banco NoSQL?",
+    opcoes: ["Chave-valor", "Documentos", "Colunas", "Grafos"],
+    correta: 3,
+    explicacao: "Bancos de grafos tratam relacionamentos como cidadãos de primeira classe, ideais para travessias profundas de conexões."
+  },
+  {
+    aula: "Aula 2",
+    pergunta: "Usar, na mesma aplicação, um banco de grafos para relacionamentos e um banco chave-valor para cache é um exemplo de:",
+    opcoes: ["Sharding", "Polyglot persistence", "Normalização", "Replicação multi-mestre"],
+    correta: 1,
+    explicacao: "Combinar mais de uma categoria de banco conforme a necessidade de cada dado é a definição de polyglot persistence."
+  },
+  {
+    aula: "Aula 3",
+    pergunta: "O que torna a busca por chave em um banco chave-valor tão rápida (próxima de O(1))?",
+    opcoes: ["O uso de índices em árvore B-Tree, como no modelo relacional", "O uso interno de uma tabela hash, que converte a chave em um endereço de memória", "O uso de uma linguagem de consulta declarativa como o SQL", "A ausência total de qualquer estrutura de indexação"],
+    correta: 1,
+    explicacao: "A tabela hash converte a chave diretamente em um endereço, permitindo acesso praticamente direto ao valor."
+  },
+  {
+    aula: "Aula 3",
+    pergunta: "A prática de nomear chaves seguindo o padrão pedido:582 tem como principal objetivo:",
+    opcoes: ["Reduzir o tamanho do valor armazenado", "Ativar automaticamente a replicação da chave", "Manter o banco organizado e facilitar a escalabilidade", "Impedir que a chave expire"],
+    correta: 2,
+    explicacao: "O padrão recurso:id é uma convenção de organização e legibilidade, não tem efeito técnico sobre replicação ou expiração."
+  },
+  {
+    aula: "Aula 3",
+    pergunta: "Você precisa armazenar uma coleção de IDs de produtos visitados por um usuário, sem permitir duplicados. Qual estrutura de dado do Redis é mais adequada?",
+    opcoes: ["List", "Set", "String", "Hash"],
+    correta: 1,
+    explicacao: "Sets garantem unicidade dos elementos — a estrutura certa quando duplicatas não fazem sentido."
+  },
+  {
+    aula: "Aula 3",
+    pergunta: "Depois de executar SET chave valor seguido de EXPIRE chave 10, e aguardar 15 segundos sem nenhuma outra operação, o que um GET chave deve retornar?",
+    opcoes: ["O valor definido originalmente", "Um erro de sintaxe", "Vazio (nil), pois a chave expirou", "O texto \"expired\""],
+    correta: 2,
+    explicacao: "Passado o TTL, o Redis remove a chave automaticamente — uma leitura depois disso retorna nil/vazio."
+  },
+  {
+    aula: "Aula 4",
+    pergunta: "No padrão de cache em que a aplicação escreve simultaneamente no cache e no banco principal, garantindo que os dois nunca fiquem desatualizados entre si, chamamos esse padrão de:",
+    opcoes: ["Cache-aside", "Write-through", "Write-behind", "Lazy loading"],
+    correta: 1,
+    explicacao: "Write-through escreve nos dois lugares ao mesmo tempo — mais lento, mas nunca desatualizado."
+  },
+  {
+    aula: "Aula 4",
+    pergunta: "Para impedir que um cliente exceda um número de requisições por minuto usando Redis, a combinação de comandos mais adequada é:",
+    opcoes: ["HSET e HGETALL", "SADD e SMEMBERS", "INCR e EXPIRE", "LPUSH e LRANGE"],
+    correta: 2,
+    explicacao: "INCR conta as requisições na janela atual, e EXPIRE garante que o contador reinicie ao final dessa janela."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+const answeredLog = []; // {aula, correct: bool}
+
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const questionTopic = document.getElementById('questionTopic');
+const questionText = document.getElementById('questionText');
+const optionsList = document.getElementById('optionsList');
+const feedback = document.getElementById('feedback');
+const feedbackTag = document.getElementById('feedbackTag');
+const feedbackText = document.getElementById('feedbackText');
+const nextBtn = document.getElementById('nextBtn');
+const scoreLive = document.getElementById('scoreLive');
+const quizBody = document.getElementById('quizBody');
+const results = document.getElementById('results');
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+  progressFill.style.width = ((current) / questions.length * 100) + '%';
+  progressLabel.textContent = `Questão ${current + 1} / ${questions.length}`;
+  questionTopic.textContent = q.aula;
+  questionText.textContent = q.pergunta;
+  scoreLive.textContent = `acertos: ${score}/${current}`;
+
+  optionsList.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.opcoes.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="letter">(${letters[i]})</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i));
+    optionsList.appendChild(btn);
+  });
+
+  feedback.className = 'feedback';
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = current === questions.length - 1 ? 'Ver resultado →' : 'Próxima pergunta →';
+}
+
+function selectAnswer(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const opts = optionsList.querySelectorAll('.option');
+  opts.forEach((el, idx) => {
+    el.disabled = true;
+    if (idx === q.correta) el.classList.add('correct');
+    else if (idx === i) el.classList.add('wrong');
+    else el.classList.add('dim');
+  });
+
+  const isCorrect = i === q.correta;
+  if (isCorrect) score++;
+  answeredLog.push({ aula: q.aula, correct: isCorrect });
+
+  feedback.className = 'feedback show ' + (isCorrect ? 'ok' : 'no');
+  feedbackTag.textContent = isCorrect ? 'Correto' : 'Não é essa';
+  feedbackText.textContent = q.explicacao;
+
+  nextBtn.classList.add('show');
+  scoreLive.textContent = `acertos: ${score}/${current + 1}`;
+}
+
+nextBtn.addEventListener('click', () => {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+  }
+});
+
+function showResults() {
+  quizBody.classList.add('hide');
+  results.classList.add('show');
+
+  document.getElementById('finalScore').textContent = score;
+
+  const pct = score / questions.length;
+  let msg;
+  if (pct === 1) msg = "Nota máxima! Você está pronto para a prova.";
+  else if (pct >= 0.75) msg = "Muito bom! Revise só os temas abaixo com menor acerto antes da prova.";
+  else if (pct >= 0.5) msg = "Bom começo. Volte ao guia de estudos nos eixos com mais erro abaixo.";
+  else msg = "Vale revisar com calma o guia de estudos antes de tentar de novo — sem pressa.";
+  document.getElementById('scoreMsg').textContent = msg;
+
+  const byAula = {};
+  answeredLog.forEach(({ aula, correct }) => {
+    if (!byAula[aula]) byAula[aula] = { total: 0, correct: 0 };
+    byAula[aula].total++;
+    if (correct) byAula[aula].correct++;
+  });
+
+  const breakdown = document.getElementById('breakdown');
+  breakdown.innerHTML = '';
+  Object.keys(byAula).sort().forEach(aula => {
+    const { total, correct } = byAula[aula];
+    const pctBar = (correct / total) * 100;
+    const row = document.createElement('div');
+    row.className = 'breakdown-row';
+    row.innerHTML = `
+      <span class="breakdown-label">${aula}</span>
+      <span class="breakdown-score">${correct}/${total}</span>
+      <div class="breakdown-bar-track"><div class="breakdown-bar-fill" style="width:${pctBar}%"></div></div>
+    `;
+    breakdown.appendChild(row);
+  });
+}
+
+document.getElementById('retryBtn').addEventListener('click', () => {
+  current = 0;
+  score = 0;
+  answeredLog.length = 0;
+  results.classList.remove('show');
+  quizBody.classList.remove('hide');
+  renderQuestion();
+});
+
+renderQuestion();
+</script>
+</body>
+</html>
